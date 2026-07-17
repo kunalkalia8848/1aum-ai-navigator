@@ -87,15 +87,15 @@ elif section == "2. Readiness Assessment":
     questions = load_questions()
     
     if questions:
-        for cat, q_list in categories.items():
-            # Group questions by category
-            categories = {}
-            for q in questions:
-                cat = q["category"]
-                if cat not in categories:
-                    categories[cat] = []
-                categories[cat].append(q)
+        # 1. Correctly group questions by category first
+        categories = {}
+        for q in questions:
+            cat = q["category"]
+            if cat not in categories:
+                categories[cat] = []
+            categories[cat].append(q)
             
+        # 2. Now loop through the built categories to display them
         for cat, q_list in categories.items():
             with st.expander(cat, expanded=True):
                 for q in q_list:
@@ -157,7 +157,6 @@ elif section == "2. Readiness Assessment":
                     
     else:
         st.error("Could not load readiness questions from data folder.")
-
 elif section == "3. Use-Case Prioritization":
     st.title("Use-Case Prioritization")
     st.write("Submit and evaluate your organizational AI initiatives.")
