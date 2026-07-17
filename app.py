@@ -176,7 +176,6 @@ elif section == "3. Use-Case Prioritization":
         business_benefit = st.text_area("Expected business benefit")
         required_data = st.text_area("Required data")
         
-        # AI Solution Type Dropdown
         solution_type = st.selectbox(
             "AI solution type",
             options=[
@@ -193,11 +192,20 @@ elif section == "3. Use-Case Prioritization":
         regulatory_sensitivity = st.text_input("Regulatory sensitivity")
         implementation_assumptions = st.text_area("Implementation assumptions")
         
+        st.write("---")
+        st.write("### Step 28: Prioritization Scoring (1-5 Scale)")
+        
+        # 1-5 Scoring Inputs with explicit directions
+        business_impact = st.slider("Business Impact (5 = Favorable/Highest Impact)", min_value=1, max_value=5, value=3)
+        strategic_alignment = st.slider("Strategic Alignment (5 = Favorable/Perfect Alignment)", min_value=1, max_value=5, value=3)
+        technical_feasibility = st.slider("Technical Feasibility (5 = Favorable/Easiest to Build)", min_value=1, max_value=5, value=3)
+        data_readiness_score = st.slider("Data Readiness (5 = Favorable/Highly Ready Data)", min_value=1, max_value=5, value=3)
+        risk_score = st.slider("Risk (5 = High Risk, 1 = Low Risk)", min_value=1, max_value=5, value=1)
+        
         submit_uc = st.form_submit_button("Add Use Case")
         
         if submit_uc:
             if uc_name:
-                # Store the use case as a dictionary in session state
                 new_use_case = {
                     "name": uc_name,
                     "business_problem": business_problem,
@@ -207,10 +215,18 @@ elif section == "3. Use-Case Prioritization":
                     "required_data": required_data,
                     "solution_type": solution_type,
                     "regulatory_sensitivity": regulatory_sensitivity,
-                    "implementation_assumptions": implementation_assumptions
+                    "implementation_assumptions": implementation_assumptions,
+                    # Step 28 scores saved here
+                    "scores": {
+                        "business_impact": business_impact,
+                        "strategic_alignment": strategic_alignment,
+                        "technical_feasibility": technical_feasibility,
+                        "data_readiness": data_readiness_score,
+                        "risk": risk_score
+                    }
                 }
                 st.session_state.use_cases.append(new_use_case)
-                st.success(f"Use case '{uc_name}' added successfully!")
+                st.success(f"Use case '{uc_name}' added and evaluated successfully!")
             else:
                 st.error("Please provide a Use-case name.")
 
@@ -222,16 +238,10 @@ elif section == "3. Use-Case Prioritization":
             with st.expander(f"{idx + 1}. {uc['name']} ({uc['solution_type']})"):
                 st.write(f"**Business Owner/Function:** {uc['business_owner']}")
                 st.write(f"**Business Problem:** {uc['business_problem']}")
-                st.write(f"**Intended Users:** {uc['intended_users']}")
-                st.write(f"**Expected Benefit:** {uc['business_benefit']}")
-                st.write(f"**Required Data:** {uc['required_data']}")
-                st.write(f"**Regulatory Sensitivity:** {uc['regulatory_sensitivity']}")
-                st.write(f"**Implementation Assumptions:** {uc['implementation_assumptions']}")
-
-elif section == "4. Risk Register":
-    st.title("Risk Register")
-    st.write("Identify and analyze material AI risks.")
-
-elif section == "5. Roadmap and Report":
-    st.title("Roadmap and Report")
-    st.write("Generate your practical 90-day execution plan.")
+                
+                # Render the evaluation summary
+                st.write("**Prioritization Metrics:**")
+                sc = uc["scores"]
+                st.text(f"  • Business Impact: {sc['business_impact']}/5 | Strategic Alignment: {sc['strategic_alignment']}/5")
+                st.text(f"  • Technical Feasibility: {sc['technical_feasibility']}/5 | Data Readiness: {sc['data_readiness']}/5")
+                st.text(f"  • Risk Profile: {sc['risk']}/5 (Note: 5 indicates high risk)")
