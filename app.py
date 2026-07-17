@@ -3,8 +3,9 @@ import json
 import os
 import pandas as pd
 
-# Import the scoring functions and the new recommendations map
+# Import backend modules
 from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps, GAP_RECOMMENDATIONS
+from modules.prioritization import calculate_priority_score
 
 # 1. Page Configuration
 st.set_page_config(
@@ -86,15 +87,15 @@ elif section == "2. Readiness Assessment":
     questions = load_questions()
     
     if questions:
-        # Group questions by category
-        categories = {}
-        for q in questions:
-            cat = q["category"]
-            if cat not in categories:
-                categories[cat] = []
-            categories[cat].append(q)
+        for cat, q_list in categories.items():
+            # Group questions by category
+            categories = {}
+            for q in questions:
+                cat = q["category"]
+                if cat not in categories:
+                    categories[cat] = []
+                categories[cat].append(q)
             
-        # Display questions dynamically
         for cat, q_list in categories.items():
             with st.expander(cat, expanded=True):
                 for q in q_list:
@@ -112,10 +113,8 @@ elif section == "2. Readiness Assessment":
         
         st.write("---")
         
-        # Submit button to calculate and display metrics
         if st.button("Submit Assessment", type="primary"):
             responses_list = list(st.session_state.readiness_responses.values())
-            
             if responses_list:
                 scores_data = calculate_readiness_scores(responses_list)
                 st.session_state.readiness_results = scores_data
@@ -123,7 +122,6 @@ elif section == "2. Readiness Assessment":
             else:
                 st.error("Please answer the questions before submitting.")
                 
-        # Display Results Section if they exist in state (persists across navigation)
         if st.session_state.readiness_results:
             results = st.session_state.readiness_results
             overall_score = results["overall_score"]
@@ -151,7 +149,6 @@ elif section == "2. Readiness Assessment":
             
             for gap_cat, gap_score in top_gaps:
                 st.warning(f"**{gap_cat}** (Score: {gap_score}/5)")
-                # Fetch explicit deterministic recommendation if defined, otherwise use a fallback
                 rec_text = GAP_RECOMMENDATIONS.get(
                     gap_cat, 
                     "Standardize existing processes, document edge test-cases, and track operational execution metrics."
@@ -165,7 +162,6 @@ elif section == "3. Use-Case Prioritization":
     st.title("Use-Case Prioritization")
     st.write("Submit and evaluate your organizational AI initiatives.")
 
-    # Form Intake Fields
     with st.form("use_case_intake_form", clear_on_submit=True):
         st.write("### Add New AI Use Case")
         
@@ -195,7 +191,6 @@ elif section == "3. Use-Case Prioritization":
         st.write("---")
         st.write("### Dimension Evaluation")
         
-        # 1-5 Scoring Inputs with explicit directions
         business_impact = st.slider("Business Impact (5 = Favorable/Highest Impact)", min_value=1, max_value=5, value=3)
         strategic_alignment = st.slider("Strategic Alignment (5 = Favorable/Perfect Alignment)", min_value=1, max_value=5, value=3)
         technical_feasibility = st.slider("Technical Feasibility (5 = Favorable/Easiest to Build)", min_value=1, max_value=5, value=3)
@@ -206,6 +201,15 @@ elif section == "3. Use-Case Prioritization":
         
         if submit_uc:
             if uc_name:
+                # Step 29: Calculate the priority score dynamically on submission
+                calculated_priority = calculate_priority_score(
+                    impact=business_impact,
+                    alignment=strategic_alignment,
+                    feasibility=technical_feasibility,
+                    data_readiness=data_readiness_score,
+                    risk=risk_score
+                )
+                
                 new_use_case = {
                     "name": uc_name,
                     "business_problem": business_problem,
@@ -216,6 +220,7 @@ elif section == "3. Use-Case Prioritization":
                     "solution_type": solution_type,
                     "regulatory_sensitivity": regulatory_sensitivity,
                     "implementation_assumptions": implementation_assumptions,
+                    "priority_score": calculated_priority,
                     "scores": {
                         "business_impact": business_impact,
                         "strategic_alignment": strategic_alignment,
@@ -225,21 +230,29 @@ elif section == "3. Use-Case Prioritization":
                     }
                 }
                 st.session_state.use_cases.append(new_use_case)
-                st.success(f"Use case '{uc_name}' added and evaluated successfully!")
+                st.success(f"Use case '{uc_name}' added and priority calculated successfully!")
             else:
                 st.error("Please provide a Use-case name.")
 
-    # Display currently added use cases if any exist
     if st.session_state.use_cases:
         st.write("---")
         st.write("### Logged Use Cases")
         for idx, uc in enumerate(st.session_state.use_cases):
-            with st.expander(f"{idx + 1}. {uc['name']} ({uc['solution_type']})"):
+            with st.expander(f"{idx + 1}. {uc['name']} (Priority Score: {uc['priority_score']})"):
+                st.write(f"**AI Solution Type:** {uc['solution_type']}")
                 st.write(f"**Business Owner/Function:** {uc['business_owner']}")
                 st.write(f"**Business Problem:** {uc['business_problem']}")
                 
-                st.write("**Prioritization Metrics:**")
+                st.write("**Prioritization Metrics Breakdown:**")
                 sc = uc["scores"]
                 st.text(f"  • Business Impact: {sc['business_impact']}/5 | Strategic Alignment: {sc['strategic_alignment']}/5")
                 st.text(f"  • Technical Feasibility: {sc['technical_feasibility']}/5 | Data Readiness: {sc['data_readiness']}/5")
-                st.text(f"  • Risk Profile: {sc['risk']}/5 (Note: 5 indicates high risk)")
+                st.text(f"  • Risk Profile: {sc['risk']}/5")
+
+elif section == "4. Risk Register":
+    st.title("Risk Register")
+    st.write("Identify and analyze material AI risks.")
+
+elif section == "5. Roadmap and Report":
+    st.title("Roadmap and Report")
+    st.write("Generate your practical 90-day execution plan.")
