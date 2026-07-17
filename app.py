@@ -1,4 +1,6 @@
 ﻿import streamlit as st
+import json
+import os
 
 # 1. Page Configuration
 st.set_page_config(
@@ -11,7 +13,7 @@ st.set_page_config(
 def initialize_session_state() -> None:
     defaults = {
         "organization_profile": {},
-        "readiness_responses": [],
+        "readiness_responses": {},
         "readiness_results": {},
         "use_cases": [],
         "risk_register": [],
@@ -24,6 +26,14 @@ def initialize_session_state() -> None:
             st.session_state[key] = default_value
 
 initialize_session_state()
+
+# Helper function to load JSON questions
+def load_questions():
+    file_path = os.path.join("data", "readiness_questions.json")
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
+            return json.load(f)
+    return []
 
 # 3. Sidebar Workflow Indicator
 section = st.sidebar.radio(
@@ -53,20 +63,36 @@ if section == "1. Organization Profile":
         Assess organizational AI readiness, prioritize AI use cases, 
         identify material risks, and generate a practical 90-day roadmap.
         """
-)
+    )
     st.success("Application initialized successfully.")
 
 elif section == "2. Readiness Assessment":
     st.title("AI Readiness Assessment")
     st.write("Evaluate capabilities across the core dimensions:")
     
-    # Step 20 Categories
-    st.markdown("- **Strategy and Leadership**")
-    st.markdown("- **Data Readiness**")
-    st.markdown("- **Technology and Infrastructure**")
-    st.markdown("- **Governance, Risk, and Security**")
-    st.markdown("- **Talent and Operating Model**")
-    st.markdown("- **Adoption and Change Management**")
+    questions = load_questions()
+    
+    if questions:
+        # Group questions by their category
+        categories = {}
+        for q in questions:
+            cat = q["category"]
+            if cat not in categories:
+                categories[cat] = []
+            categories[cat].append(q)
+            
+        # Display the categories and questions dynamically
+        for cat, q_list in categories.items():
+            with st.expander(cat, expanded=True):
+                for q in q_list:
+                    # Creating a unique key for each question using its ID
+                    st.radio(
+                        q["question"],
+                        options=["1 - Initial / Ad-hoc", "2 - Repeatable", "3 - Defined", "4 - Managed", "5 - Optimized"],
+                        key=f"q_{q['id']}"
+                    )
+    else:
+        st.error("Could not load readiness questions from data folder.")
 
 elif section == "3. Use-Case Prioritization":
     st.title("Use-Case Prioritization")
