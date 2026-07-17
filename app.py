@@ -1,13 +1,13 @@
 ﻿import streamlit as st
 
-# 1. Page Configuration (This sets up the browser tab)
+# 1. Page Configuration
 st.set_page_config(
     page_title="1AUM Navigator",
     page_icon="🧭",
     layout="wide",
 )
 
-# 2. Initialize Session State (This sets up the temporary data notebook)
+# 2. Initialize Session State
 def initialize_session_state() -> None:
     defaults = {
         "organization_profile": {},
@@ -23,11 +23,21 @@ def initialize_session_state() -> None:
         if key not in st.session_state:
             st.session_state[key] = default_value
 
-# This runs the notebook setup right away
 initialize_session_state()
 
+# 3. Sidebar Workflow Indicator (Step 19)
+section = st.sidebar.radio(
+    "Navigator Workflow",
+    [
+        "1. Organization Profile",
+        "2. Readiness Assessment",
+        "3. Use-Case Prioritization",
+        "4. Risk Register",
+        "5. Roadmap and Report",
+    ],
+)
 
-# 3. UI Layout (This draws the text on the screen)
+# 4. Main UI Layout
 st.title("1AUM Navigator")
 st.subheader("From AI opportunity to governed execution.")
 
