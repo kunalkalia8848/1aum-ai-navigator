@@ -3,8 +3,8 @@ import json
 import os
 import pandas as pd
 
-# Import the scoring functions from Step 24
-from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps
+# Import the scoring functions and the new recommendations map
+from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps, GAP_RECOMMENDATIONS
 
 # 1. Page Configuration
 st.set_page_config(
@@ -117,32 +117,28 @@ elif section == "2. Readiness Assessment":
             responses_list = list(st.session_state.readiness_responses.values())
             
             if responses_list:
-                # Run backend calculations
                 scores_data = calculate_readiness_scores(responses_list)
                 st.session_state.readiness_results = scores_data
                 st.success("Assessment calculated and saved successfully!")
             else:
                 st.error("Please answer the questions before submitting.")
                 
-        # Display Results Section if they exist in state
+        # Display Results Section if they exist in state (persists across navigation)
         if st.session_state.readiness_results:
             results = st.session_state.readiness_results
             overall_score = results["overall_score"]
             category_scores = results["category_scores"]
             
-            # Step 25 Requirements: Calculate Percentage and Maturity level
             percentage_score = round((overall_score / 5) * 100)
             mat_level = maturity_level(overall_score)
             
             st.write("### Assessment Results")
             
-            # Key KPI Cards
             col1, col2, col3 = st.columns(3)
             col1.metric("Overall Score", f"{overall_score} / 5")
             col2.metric("Percentage Equivalent", f"{percentage_score}%")
             col3.metric("Maturity Level", mat_level)
             
-            # Bar Chart rendering using Pandas and Streamlit native chart
             st.write("#### Scores by Category")
             df = pd.DataFrame({
                 "Category": list(category_scores.keys()),
@@ -150,17 +146,17 @@ elif section == "2. Readiness Assessment":
             })
             st.bar_chart(data=df, x="Category", y="Score")
             
-            # Identify and display the 3 lowest-scoring categories (Gaps)
             st.write("#### Top Gaps & Key Recommendations")
             top_gaps = identify_top_gaps(category_scores, number_of_gaps=3)
             
             for gap_cat, gap_score in top_gaps:
                 st.warning(f"**{gap_cat}** (Score: {gap_score}/5)")
-                # Simple deterministic recommendations
-                if gap_score < 3:
-                    st.write("👉 *Recommendation:* Prioritize foundational frameworks, define core responsibilities, and assign formal ownership immediately.")
-                else:
-                    st.write("👉 *Recommendation:* Standardize existing processes, document edge test-cases, and track operational execution metrics.")
+                # Fetch explicit deterministic recommendation if defined, otherwise use a fallback
+                rec_text = GAP_RECOMMENDATIONS.get(
+                    gap_cat, 
+                    "Standardize existing processes, document edge test-cases, and track operational execution metrics."
+                )
+                st.write(f"👉 *Recommendation:* {rec_text}")
                     
     else:
         st.error("Could not load readiness questions from data folder.")

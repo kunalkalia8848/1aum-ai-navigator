@@ -4,6 +4,22 @@ from typing import Any
 VALID_MIN_SCORE = 1
 VALID_MAX_SCORE = 5
 
+# Step 26 Deterministic recommendations dictionary
+GAP_RECOMMENDATIONS = {
+    "Strategy and Leadership": (
+        "Assign an executive sponsor, connect AI initiatives to measurable "
+        "business outcomes, and establish a funded AI roadmap."
+    ),
+    "Data Readiness": (
+        "Assess data quality, assign data ownership, and document data "
+        "access, lineage, privacy, and retention requirements."
+    ),
+    "Governance, Risk, and Security": (
+        "Establish an AI use-case intake, approval, risk assessment, "
+        "and monitoring process."
+    ),
+}
+
 def validate_readiness_responses(
     responses: list[dict[str, Any]],
 ) -> None:
