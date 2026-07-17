@@ -1,0 +1,52 @@
+[
+  {
+    "id": "SL-01",
+    "category": "Strategy and Leadership",
+    "question": "Is there an executive sponsor accountable for AI outcomes?"
+  },
+  {
+    "id": "SL-02",
+    "category": "Strategy and Leadership",
+    "question": "Are AI initiatives tied to measurable business objectives?"
+  },
+  {
+    "id": "SL-03",
+    "category": "Strategy and Leadership",
+    "question": "Has the organization identified priority AI use cases?"
+  },
+  {
+    "id": "SL-04",
+    "category": "Strategy and Leadership",
+    "question": "Is there a documented AI strategy or transformation roadmap?"
+  },
+  {
+    "id": "SL-05",
+    "category": "Strategy and Leadership",
+    "question": "Are funding, ownership, and decision rights clearly assigned?"
+  },
+  {
+    "id": "DR-01",
+    "category": "Data Readiness",
+    "question": "Is required data accessible to authorized teams?"
+  },
+  {
+    "id": "DR-02",
+    "category": "Data Readiness",
+    "question": "Is data quality measured and monitored?"
+  },
+  {
+    "id": "DR-03",
+    "category": "Data Readiness",
+    "question": "Are data owners and stewards identified?"
+  },
+  {
+    "id": "DR-04",
+    "category": "Data Readiness",
+    "question": "Can data lineage be traced for important datasets?"
+  },
+  {
+    "id": "DR-05",
+    "category": "Data Readiness",
+    "question": "Are privacy, retention, residency, and usage restrictions documented?"
+  }
+]
