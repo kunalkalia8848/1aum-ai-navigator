@@ -1,6 +1,10 @@
 ﻿import streamlit as st
 import json
 import os
+import pandas as pd
+
+# Import the scoring functions from Step 24
+from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps
 
 # 1. Page Configuration
 st.set_page_config(
@@ -35,7 +39,7 @@ def load_questions():
             return json.load(f)
     return []
 
-# Map descriptive labels (Step 23) to numeric scores
+# Map descriptive labels to numeric scores
 SCORE_MAP = {
     "1 - Not established": 1,
     "2 - Early stage": 2,
@@ -94,22 +98,69 @@ elif section == "2. Readiness Assessment":
         for cat, q_list in categories.items():
             with st.expander(cat, expanded=True):
                 for q in q_list:
-                    # Capture descriptive selection
                     selected_label = st.radio(
                         q["question"],
                         options=list(SCORE_MAP.keys()),
                         key=f"q_{q['id']}"
                     )
-                    # Convert to numeric score and save into session state responses
                     score_val = SCORE_MAP[selected_label]
                     st.session_state.readiness_responses[q["id"]] = {
                         "category": q["category"],
                         "question_id": q["id"],
                         "score": score_val
                     }
-                    
-        # Let users know their inputs are being securely tracked
-        st.success("Responses captured successfully in session memory.")
+        
+        st.write("---")
+        
+        # Submit button to calculate and display metrics
+        if st.button("Submit Assessment", type="primary"):
+            responses_list = list(st.session_state.readiness_responses.values())
+            
+            if responses_list:
+                # Run backend calculations
+                scores_data = calculate_readiness_scores(responses_list)
+                st.session_state.readiness_results = scores_data
+                st.success("Assessment calculated and saved successfully!")
+            else:
+                st.error("Please answer the questions before submitting.")
+                
+        # Display Results Section if they exist in state
+        if st.session_state.readiness_results:
+            results = st.session_state.readiness_results
+            overall_score = results["overall_score"]
+            category_scores = results["category_scores"]
+            
+            # Step 25 Requirements: Calculate Percentage and Maturity level
+            percentage_score = round((overall_score / 5) * 100)
+            mat_level = maturity_level(overall_score)
+            
+            st.write("### Assessment Results")
+            
+            # Key KPI Cards
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Overall Score", f"{overall_score} / 5")
+            col2.metric("Percentage Equivalent", f"{percentage_score}%")
+            col3.metric("Maturity Level", mat_level)
+            
+            # Bar Chart rendering using Pandas and Streamlit native chart
+            st.write("#### Scores by Category")
+            df = pd.DataFrame({
+                "Category": list(category_scores.keys()),
+                "Score": list(category_scores.values())
+            })
+            st.bar_chart(data=df, x="Category", y="Score")
+            
+            # Identify and display the 3 lowest-scoring categories (Gaps)
+            st.write("#### Top Gaps & Key Recommendations")
+            top_gaps = identify_top_gaps(category_scores, number_of_gaps=3)
+            
+            for gap_cat, gap_score in top_gaps:
+                st.warning(f"**{gap_cat}** (Score: {gap_score}/5)")
+                # Simple deterministic recommendations
+                if gap_score < 3:
+                    st.write("👉 *Recommendation:* Prioritize foundational frameworks, define core responsibilities, and assign formal ownership immediately.")
+                else:
+                    st.write("👉 *Recommendation:* Standardize existing processes, document edge test-cases, and track operational execution metrics.")
                     
     else:
         st.error("Could not load readiness questions from data folder.")
