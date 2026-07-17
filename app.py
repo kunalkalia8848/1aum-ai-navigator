@@ -35,6 +35,15 @@ def load_questions():
             return json.load(f)
     return []
 
+# Map descriptive labels (Step 23) to numeric scores
+SCORE_MAP = {
+    "1 - Not established": 1,
+    "2 - Early stage": 2,
+    "3 - Partially established": 3,
+    "4 - Mostly established": 4,
+    "5 - Mature and repeatable": 5
+}
+
 # 3. Sidebar Workflow Indicator
 section = st.sidebar.radio(
     "Navigator Workflow",
@@ -73,7 +82,7 @@ elif section == "2. Readiness Assessment":
     questions = load_questions()
     
     if questions:
-        # Group questions by their category
+        # Group questions by category
         categories = {}
         for q in questions:
             cat = q["category"]
@@ -81,16 +90,27 @@ elif section == "2. Readiness Assessment":
                 categories[cat] = []
             categories[cat].append(q)
             
-        # Display the categories and questions dynamically
+        # Display questions dynamically
         for cat, q_list in categories.items():
             with st.expander(cat, expanded=True):
                 for q in q_list:
-                    # Creating a unique key for each question using its ID
-                    st.radio(
+                    # Capture descriptive selection
+                    selected_label = st.radio(
                         q["question"],
-                        options=["1 - Initial / Ad-hoc", "2 - Repeatable", "3 - Defined", "4 - Managed", "5 - Optimized"],
+                        options=list(SCORE_MAP.keys()),
                         key=f"q_{q['id']}"
                     )
+                    # Convert to numeric score and save into session state responses
+                    score_val = SCORE_MAP[selected_label]
+                    st.session_state.readiness_responses[q["id"]] = {
+                        "category": q["category"],
+                        "question_id": q["id"],
+                        "score": score_val
+                    }
+                    
+        # Let users know their inputs are being securely tracked
+        st.success("Responses captured successfully in session memory.")
+                    
     else:
         st.error("Could not load readiness questions from data folder.")
 
