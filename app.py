@@ -165,7 +165,7 @@ elif section == "3. Use-Case Prioritization":
     st.title("Use-Case Prioritization")
     st.write("Submit and evaluate your organizational AI initiatives.")
 
-    # Step 27 Form Intake Fields
+    # Form Intake Fields
     with st.form("use_case_intake_form", clear_on_submit=True):
         st.write("### Add New AI Use Case")
         
@@ -193,7 +193,7 @@ elif section == "3. Use-Case Prioritization":
         implementation_assumptions = st.text_area("Implementation assumptions")
         
         st.write("---")
-        st.write("### Step 28: Prioritization Scoring (1-5 Scale)")
+        st.write("### Dimension Evaluation")
         
         # 1-5 Scoring Inputs with explicit directions
         business_impact = st.slider("Business Impact (5 = Favorable/Highest Impact)", min_value=1, max_value=5, value=3)
@@ -216,7 +216,6 @@ elif section == "3. Use-Case Prioritization":
                     "solution_type": solution_type,
                     "regulatory_sensitivity": regulatory_sensitivity,
                     "implementation_assumptions": implementation_assumptions,
-                    # Step 28 scores saved here
                     "scores": {
                         "business_impact": business_impact,
                         "strategic_alignment": strategic_alignment,
@@ -239,7 +238,6 @@ elif section == "3. Use-Case Prioritization":
                 st.write(f"**Business Owner/Function:** {uc['business_owner']}")
                 st.write(f"**Business Problem:** {uc['business_problem']}")
                 
-                # Render the evaluation summary
                 st.write("**Prioritization Metrics:**")
                 sc = uc["scores"]
                 st.text(f"  • Business Impact: {sc['business_impact']}/5 | Strategic Alignment: {sc['strategic_alignment']}/5")
