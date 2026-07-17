@@ -163,7 +163,70 @@ elif section == "2. Readiness Assessment":
 
 elif section == "3. Use-Case Prioritization":
     st.title("Use-Case Prioritization")
-    st.write("Prioritize and evaluate your AI initiatives.")
+    st.write("Submit and evaluate your organizational AI initiatives.")
+
+    # Step 27 Form Intake Fields
+    with st.form("use_case_intake_form", clear_on_submit=True):
+        st.write("### Add New AI Use Case")
+        
+        uc_name = st.text_input("Use-case name")
+        business_problem = st.text_area("Business problem")
+        business_owner = st.text_input("Business owner or function")
+        intended_users = st.text_input("Intended users")
+        business_benefit = st.text_area("Expected business benefit")
+        required_data = st.text_area("Required data")
+        
+        # AI Solution Type Dropdown
+        solution_type = st.selectbox(
+            "AI solution type",
+            options=[
+                "Predictive analytics",
+                "Computer vision",
+                "Generative AI",
+                "Intelligent automation",
+                "Optimization",
+                "Natural-language processing",
+                "Other"
+            ]
+        )
+        
+        regulatory_sensitivity = st.text_input("Regulatory sensitivity")
+        implementation_assumptions = st.text_area("Implementation assumptions")
+        
+        submit_uc = st.form_submit_button("Add Use Case")
+        
+        if submit_uc:
+            if uc_name:
+                # Store the use case as a dictionary in session state
+                new_use_case = {
+                    "name": uc_name,
+                    "business_problem": business_problem,
+                    "business_owner": business_owner,
+                    "intended_users": intended_users,
+                    "business_benefit": business_benefit,
+                    "required_data": required_data,
+                    "solution_type": solution_type,
+                    "regulatory_sensitivity": regulatory_sensitivity,
+                    "implementation_assumptions": implementation_assumptions
+                }
+                st.session_state.use_cases.append(new_use_case)
+                st.success(f"Use case '{uc_name}' added successfully!")
+            else:
+                st.error("Please provide a Use-case name.")
+
+    # Display currently added use cases if any exist
+    if st.session_state.use_cases:
+        st.write("---")
+        st.write("### Logged Use Cases")
+        for idx, uc in enumerate(st.session_state.use_cases):
+            with st.expander(f"{idx + 1}. {uc['name']} ({uc['solution_type']})"):
+                st.write(f"**Business Owner/Function:** {uc['business_owner']}")
+                st.write(f"**Business Problem:** {uc['business_problem']}")
+                st.write(f"**Intended Users:** {uc['intended_users']}")
+                st.write(f"**Expected Benefit:** {uc['business_benefit']}")
+                st.write(f"**Required Data:** {uc['required_data']}")
+                st.write(f"**Regulatory Sensitivity:** {uc['regulatory_sensitivity']}")
+                st.write(f"**Implementation Assumptions:** {uc['implementation_assumptions']}")
 
 elif section == "4. Risk Register":
     st.title("Risk Register")
