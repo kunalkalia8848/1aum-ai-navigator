@@ -2,6 +2,7 @@
 import json
 import os
 import pandas as pd
+import datetime
 
 # Import backend modules
 from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps, GAP_RECOMMENDATIONS
@@ -11,6 +12,7 @@ from modules.prioritization import (
     explain_recommendation,
     normalize_name
 )
+from modules.risk_register import calculate_risk_score, classify_risk
 
 # 1. Page Configuration
 st.set_page_config(
@@ -319,8 +321,161 @@ elif section == "3. Use-Case Prioritization":
                     st.rerun()
 elif section == "4. Risk Register":
     st.title("Risk Register")
-    st.write("Identify and analyze material AI risks.")
+    st.write("Identify, score, and manage material AI risks across logged use cases.")
 
-elif section == "5. Roadmap and Report":
-    st.title("Roadmap and Report")
-    st.write("Generate your practical 90-day execution plan.")
+    st.info(
+        "💡 Note: The risks suggested here are generated deterministically based on solution type. "
+        "They serve as a foundational starting point and should be thoroughly reviewed, edited, or expanded for your environment."
+    )
+
+    risk_lib = load_risk_library()
+
+    # --- STEP 38: GENERATE RISKS FOR LOGGED USE CASES ---
+    st.write("### ⚡ Generate Risk Records")
+    if st.session_state.use_cases:
+        use_case_names = [uc["name"] for uc in st.session_state.use_cases]
+        selected_uc_name = st.selectbox("Select Use Case to Assess", options=use_case_names)
+
+        # Find selected use case dict
+        selected_uc = next((u for u in st.session_state.use_cases if u["name"] == selected_uc_name), None)
+
+        if selected_uc:
+            st.caption(f"**Solution Type:** {selected_uc['solution_type']} | **Owner:** {selected_uc['business_owner'] or 'Unassigned'}")
+
+            if st.button(f"Generate Risk Templates for '{selected_uc_name}'", type="primary"):
+                sol_type = selected_uc["solution_type"]
+                templates = risk_lib.get(sol_type, risk_lib.get("Other", []))
+
+                added_count = 0
+                for tmpl in templates:
+                    # Check if this risk already exists for this use case
+                    exists = any(
+                        r["use_case"] == selected_uc_name and r["source_template"] == tmpl["template_id"]
+                        for r in st.session_state.risk_register
+                    )
+                    if not exists:
+                        risk_count = len(st.session_state.risk_register) + 1
+                        risk_id = f"RISK-{risk_count:03d}"
+                        
+                        l_val = tmpl["default_likelihood"]
+                        i_val = tmpl["default_impact"]
+                        r_score = calculate_risk_score(l_val, i_val)
+                        severity = classify_risk(r_score)
+
+                        new_risk = {
+                            "risk_id": risk_id,
+                            "use_case": selected_uc_name,
+                            "category": tmpl["category"],
+                            "description": tmpl["description"],
+                            "likelihood": l_val,
+                            "impact": i_val,
+                            "risk_score": r_score,
+                            "severity": severity,
+                            "mitigation": tmpl["mitigation"],
+                            "owner": selected_uc.get("business_owner", ""),
+                            "status": "Open",
+                            "review_date": str(datetime.date.today() + datetime.timedelta(days=30)),
+                            "source_template": tmpl["template_id"],
+                        }
+                        st.session_state.risk_register.append(new_risk)
+                        added_count += 1
+
+                if added_count > 0:
+                    st.success(f"Generated {added_count} risk record(s) for '{selected_uc_name}'!")
+                    st.rerun()
+                else:
+                    st.warning("Risk records for this use case have already been generated.")
+    else:
+        st.warning("No use cases available. Please create at least one use case in '3. Use-Case Prioritization' first.")
+
+    # --- STEP 40: RISK SUMMARY METRICS & AUDIT FLAGS ---
+    if st.session_state.risk_register:
+        st.write("---")
+        st.write("## 📈 Risk Summary Dashboard")
+
+        total_risks = len(st.session_state.risk_register)
+        critical_risks = sum(1 for r in st.session_state.risk_register if r["severity"] == "Critical")
+        high_risks = sum(1 for r in st.session_state.risk_register if r["severity"] == "High")
+        unowned_risks = sum(1 for r in st.session_state.risk_register if not r["owner"].strip())
+        unmitigated_risks = sum(1 for r in st.session_state.risk_register if not r["mitigation"].strip())
+
+        col1, col2, col3, col4, col5 = st.columns(5)
+        col1.metric("Total Risks", total_risks)
+        col2.metric("Critical Risks", critical_risks)
+        col3.metric("High Risks", high_risks)
+        col4.metric("Unowned Risks", unowned_risks, delta="-Missing Owner" if unowned_risks > 0 else "OK", delta_color="inverse")
+        col5.metric("Unmitigated Risks", unmitigated_risks, delta="-Missing Plan" if unmitigated_risks > 0 else "OK", delta_color="inverse")
+
+        # Category Chart
+        st.write("### 📊 Risks by Category")
+        cat_counts = {}
+        for r in st.session_state.risk_register:
+            c = r["category"]
+            cat_counts[c] = cat_counts.get(c, 0) + 1
+        
+        df_risk_cat = pd.DataFrame({"Category": list(cat_counts.keys()), "Count": list(cat_counts.values())})
+        st.bar_chart(df_risk_cat, x="Category", y="Count")
+
+        # Table View
+        st.write("### 📋 Active Risk Register Table")
+        df_risk_table = pd.DataFrame(st.session_state.risk_register)
+        st.dataframe(
+            df_risk_table[["risk_id", "use_case", "category", "severity", "risk_score", "owner", "status", "review_date"]],
+            use_container_width=True
+        )
+
+        # --- STEP 39: EDITABLE RISK RECORDS ---
+        st.write("---")
+        st.write("## 🛠️ Edit & Refine Risk Records")
+        
+        for idx, risk in enumerate(st.session_state.risk_register):
+            with st.expander(f"{risk['risk_id']}: {risk['category']} ({risk['use_case']}) — [{risk['severity']} | Score: {risk['risk_score']}]"):
+                with st.form(f"edit_risk_form_{risk['risk_id']}"):
+                    st.write(f"**Template Ref:** `{risk['source_template']}`")
+                    
+                    new_desc = st.text_area("Risk Description", value=risk["description"])
+                    
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        new_l = st.slider("Likelihood (1-5)", min_value=1, max_value=5, value=int(risk["likelihood"]), key=f"l_{risk['risk_id']}")
+                    with c2:
+                        new_i = st.slider("Impact (1-5)", min_value=1, max_value=5, value=int(risk["impact"]), key=f"i_{risk['risk_id']}")
+
+                    new_mit = st.text_area("Mitigation Controls", value=risk["mitigation"])
+                    
+                    c3, c4, c5 = st.columns(3)
+                    with c3:
+                        new_owner = st.text_input("Risk Owner", value=risk["owner"])
+                    with c4:
+                        new_status = st.selectbox(
+                            "Status",
+                            options=["Open", "Mitigation Planned", "In Progress", "Accepted", "Closed"],
+                            index=["Open", "Mitigation Planned", "In Progress", "Accepted", "Closed"].index(risk["status"]) if risk["status"] in ["Open", "Mitigation Planned", "In Progress", "Accepted", "Closed"] else 0
+                        )
+                    with c5:
+                        new_date = st.text_input("Review Date (YYYY-MM-DD)", value=risk["review_date"])
+
+                    col_save, col_del = st.columns([1, 4])
+                    save_btn = st.form_submit_button("Save Changes")
+
+                    if save_btn:
+                        calc_score = calculate_risk_score(new_l, new_i)
+                        calc_sev = classify_risk(calc_score)
+
+                        st.session_state.risk_register[idx].update({
+                            "description": new_desc,
+                            "likelihood": new_l,
+                            "impact": new_i,
+                            "risk_score": calc_score,
+                            "severity": calc_sev,
+                            "mitigation": new_mit,
+                            "owner": new_owner,
+                            "status": new_status,
+                            "review_date": new_date,
+                        })
+                        st.success(f"Updated {risk['risk_id']} successfully!")
+                        st.rerun()
+
+                if st.button(f"🗑️ Delete {risk['risk_id']}", key=f"del_risk_{risk['risk_id']}"):
+                    st.session_state.risk_register.pop(idx)
+                    st.rerun()
