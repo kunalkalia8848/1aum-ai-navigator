@@ -8,6 +8,7 @@ import datetime
 from modules.report_generator import generate_deterministic_summary
 from modules.roadmap import generate_roadmap, generate_conditional_actions
 from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps, GAP_RECOMMENDATIONS
+from modules.demo_data import DEMO_COMPANIES
 from modules.report_generator import (
     generate_deterministic_summary,
     prepare_llm_payload,
@@ -87,7 +88,19 @@ section = st.sidebar.radio(
         "5. Roadmap and Report",
     ],
 )
+# --- STAGE 11: DEMO MODE CONTROLS ---
+st.sidebar.write("---")
+st.sidebar.subheader("⚡ Demo Mode")
+selected_demo = st.sidebar.selectbox("Select Sample Profile", options=list(DEMO_COMPANIES.keys()))
 
+if st.sidebar.button("🚀 Load Demo Organization"):
+    demo = DEMO_COMPANIES[selected_demo]
+    st.session_state["org_profile"] = demo["org_profile"]
+    st.session_state["readiness_results"] = demo["readiness_scores"]
+    st.session_state["use_cases"] = demo["use_cases"]
+    st.session_state["risk_register"] = demo["risk_register"]
+    st.sidebar.success(f"Loaded {selected_demo.split(':')[0]} data!")
+    st.rerun()
 # 4. Main UI Layout Routing
 if section == "1. Organization Profile":
     st.title("1AUM Navigator")
