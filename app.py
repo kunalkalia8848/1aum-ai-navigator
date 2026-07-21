@@ -583,3 +583,168 @@ elif section == "4. Risk Register":
                 st.write("### 📌 Assessment Limitations")
                 for lim in summary_data["limitations"]:
                     st.write(f"ℹ️ {lim}")
+elif section == "5. Roadmap and Report":
+    st.title("90-Day Implementation Roadmap & Executive Report")
+    st.write("Tailored operational execution path based on organizational readiness and risk posture.")
+
+    if not st.session_state.use_cases:
+        st.warning("No use cases available. Please log at least one use case in '3. Use-Case Prioritization' first.")
+    else:
+        use_case_names = [uc["name"] for uc in st.session_state.use_cases]
+        selected_uc_name = st.selectbox("Select Use Case for Roadmap Generation", options=use_case_names)
+        
+        selected_uc = next((u for u in st.session_state.use_cases if u["name"] == selected_uc_name), None)
+
+        if selected_uc:
+            # 1. Base Roadmap
+            base_roadmap = generate_roadmap(selected_uc_name)
+
+            # 2. Extract readiness scores if available
+            readiness_scores = {}
+            if st.session_state.readiness_results:
+                readiness_scores = st.session_state.readiness_results.get("category_scores", {})
+
+            # 3. Determine highest risk severity for this use case
+            uc_risks = [r for r in st.session_state.risk_register if r["use_case"] == selected_uc_name]
+            severities = [r["severity"] for r in uc_risks]
+            
+            if "Critical" in severities:
+                highest_severity = "Critical"
+            elif "High" in severities:
+                highest_severity = "High"
+            elif "Medium" in severities:
+                highest_severity = "Medium"
+            elif "Low" in severities:
+                highest_severity = "Low"
+            else:
+                highest_severity = "None"
+
+            # 4. Generate conditional customized actions
+            custom_actions = generate_conditional_actions(
+                readiness_scores=readiness_scores,
+                highest_risk_severity=highest_severity,
+                selected_use_case=selected_uc
+            )
+
+            st.write("---")
+            st.write(f"## 🗓️ 90-Day Action Plan: **{selected_uc_name}**")
+            st.caption(f"**AI Solution Type:** {selected_uc['solution_type']} | **Owner:** {selected_uc['business_owner'] or 'Unassigned'}")
+
+            # Display Conditional Adjustments first if triggered
+            if custom_actions:
+                st.write("### 🚨 Tailored Gap-Closure Actions")
+                st.info("The following conditional actions were dynamically inserted into your roadmap based on identified readiness gaps and risk flags.")
+                
+                for idx, act in enumerate(custom_actions):
+                    with st.expander(f"⚡ [{act['phase']}] {act['action']}"):
+                        st.write(f"**Trigger:** `{act['trigger']}`")
+                        st.write(f"**Rationale:** {act['rationale']}")
+                        st.write(f"**Suggested Owner:** `{act['suggested_owner']}`")
+
+            # Display 4-Phase Standard Roadmap
+            st.write("---")
+            st.write("### 🧭 Core 90-Day Milestones")
+            
+            for phase in base_roadmap["phases"]:
+                st.write(f"#### {phase['phase_name']}")
+                
+                # Check for matching custom actions for this phase
+                phase_actions = [a for a in custom_actions if a["phase"] in phase["phase_name"]]
+                
+                for m in phase["milestones"]:
+                    st.write(f"  • {m}")
+                    
+                if phase_actions:
+                    for pa in phase_actions:
+                        st.warning(f"  👉 **REQUIRED ADJUSTMENT:** {pa['action']} *(Owner: {pa['suggested_owner']})*")
+                st.write("")
+
+            # --- EXECUTIVE SUMMARY REPORT ---
+            st.write("---")
+            st.write("## 📄 Executive Summary Report")
+
+            org_name = st.session_state.org_profile.get("company_name", "Organization") if st.session_state.org_profile else "Organization"
+            
+            # Extract scores & gaps
+            if st.session_state.readiness_results:
+                ov_score = st.session_state.readiness_results.get("overall_score", 0.0)
+                mat_level = st.session_state.readiness_results.get("maturity_level", "Unassessed")
+                top_gaps = st.session_state.readiness_results.get("top_gaps", [])
+            else:
+                ov_score = 0.0
+                mat_level = "Unassessed"
+                top_gaps = []
+
+            sorted_ucs = sorted(st.session_state.use_cases, key=lambda x: x["priority_score"], reverse=True)
+            crit_count = sum(1 for r in st.session_state.risk_register if r["severity"] == "Critical")
+
+            # Prepare sanitized payload for AI
+            payload = prepare_llm_payload(
+                org_profile=st.session_state.org_profile or {},
+                readiness_results=st.session_state.readiness_results or {},
+                use_cases=st.session_state.use_cases,
+                risk_register=st.session_state.risk_register,
+                roadmap_actions=custom_actions
+            )
+
+            # Graceful Fallback Execution
+            ai_generated = False
+            summary_data = None
+
+            try:
+                ai_output = generate_ai_summary(payload)
+                summary_data = {
+                    "current_state": ai_output.current_state,
+                    "top_strengths": ai_output.top_strengths,
+                    "key_gaps": ai_output.key_gaps,
+                    "priority_use_cases": ai_output.priority_use_cases,
+                    "immediate_actions": ai_output.immediate_actions,
+                    "limitations": ai_output.limitations,
+                }
+                ai_generated = True
+            except Exception:
+                summary_data = generate_deterministic_summary(
+                    organization_name=org_name,
+                    overall_score=ov_score,
+                    maturity=mat_level,
+                    gaps=top_gaps,
+                    top_use_cases=sorted_ucs,
+                    critical_risk_count=crit_count
+                )
+                st.warning("⚠️ AI-generated narrative is temporarily unavailable. A deterministic summary has been provided.")
+
+            # Render Report with Provenance Labels
+            if ai_generated:
+                st.caption("🏷️ **Data Provenance:** *Narrative generated with AI (GPT-4o-mini)*")
+            else:
+                st.caption("🏷️ **Data Provenance:** *Calculated by deterministic scoring*")
+
+            st.write("### 🏢 Current State & Maturity Profile")
+            st.write(summary_data["current_state"])
+
+            col_rep1, col_rep2 = st.columns(2)
+            with col_rep1:
+                st.write("### ⚠️ Key Operational Gaps")
+                if summary_data.get("key_gaps"):
+                    for gap in summary_data["key_gaps"]:
+                        st.write(f"• {gap}")
+                else:
+                    st.write("• No major category gaps identified below baseline.")
+
+            with col_rep2:
+                st.write("### 🏆 Priority AI Use Cases")
+                if summary_data.get("priority_use_cases"):
+                    for idx, uc_n in enumerate(summary_data["priority_use_cases"]):
+                        st.write(f"{idx+1}. {uc_n}")
+                else:
+                    st.write("• No priority use cases logged.")
+
+            st.write("### 🎯 Immediate Executive Actions")
+            if summary_data.get("immediate_actions"):
+                for act in summary_data["immediate_actions"]:
+                    st.write(f"✓ {act}")
+
+            if summary_data.get("limitations"):
+                st.write("### 📌 Assessment Limitations")
+                for lim in summary_data["limitations"]:
+                    st.write(f"ℹ️ {lim}")
