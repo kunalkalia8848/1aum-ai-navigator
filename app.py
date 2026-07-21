@@ -487,7 +487,7 @@ elif section == "4. Risk Register":
                 if st.button(f"🗑️ Delete {risk['risk_id']}", key=f"del_risk_{risk['risk_id']}"):
                     st.session_state.risk_register.pop(idx)
                     st.rerun()
-elif section == "5. 90-Day Roadmap":
+elif section == "5. Roadmap and Report":
     st.title("90-Day Implementation Roadmap")
     st.write("Tailored operational execution path based on organizational readiness and risk posture.")
 
