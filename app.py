@@ -450,6 +450,9 @@ elif section == "4. Risk Register":
         # Table View
         st.write("### 📋 Active Risk Register Table")
         df_risk_table = pd.DataFrame(st.session_state.risk_register)
+        for col in ["risk_id", "use_case", "category", "severity", "risk_score", "owner", "status", "review_date"]:
+           if col not in df_risk_table.columns:
+              df_risk_table[col] = "N/A" if col not in ["status", "review_date"] else ("Open" if col == "status" else "Pending")
         st.dataframe(
             df_risk_table[["risk_id", "use_case", "category", "severity", "risk_score", "owner", "status", "review_date"]],
             use_container_width=True
