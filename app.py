@@ -5,9 +5,12 @@ import pandas as pd
 
 # Import backend modules
 from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps, GAP_RECOMMENDATIONS
-from modules.prioritization import calculate_priority_score
-from modules.prioritization import calculate_priority_score, classify_use_case
-from modules.prioritization import calculate_priority_score, classify_use_case, explain_recommendation
+from modules.prioritization import (
+    calculate_priority_score, 
+    classify_use_case, 
+    explain_recommendation,
+    normalize_name
+)
 
 # 1. Page Configuration
 st.set_page_config(
@@ -163,6 +166,7 @@ elif section == "3. Use-Case Prioritization":
     st.title("Use-Case Prioritization")
     st.write("Submit and evaluate your organizational AI initiatives.")
 
+    # --- INTAKE FORM ---
     with st.form("use_case_intake_form", clear_on_submit=True):
         st.write("### Add New AI Use Case")
         
@@ -201,75 +205,118 @@ elif section == "3. Use-Case Prioritization":
         submit_uc = st.form_submit_button("Add Use Case")
         
         if submit_uc:
-            if uc_name:
-                scores_dict = {
-                    "impact": business_impact,
-                    "alignment": strategic_alignment,
-                    "feasibility": technical_feasibility,
-                    "data_readiness": data_readiness_score,
-                    "risk": risk_score
-                }
-
-                calculated_priority = calculate_priority_score(
-                    impact=business_impact,
-                    alignment=strategic_alignment,
-                    feasibility=technical_feasibility,
-                    data_readiness=data_readiness_score,
-                    risk=risk_score
-                )
-                
-                classification = classify_use_case(
-                    impact=business_impact,
-                    alignment=strategic_alignment,
-                    feasibility=technical_feasibility,
-                    data_readiness=data_readiness_score,
-                    risk=risk_score
-                )
-
-                explanation = explain_recommendation(scores_dict)
-                
-                new_use_case = {
-                    "name": uc_name,
-                    "business_problem": business_problem,
-                    "business_owner": business_owner,
-                    "intended_users": intended_users,
-                    "business_benefit": business_benefit,
-                    "required_data": required_data,
-                    "solution_type": solution_type,
-                    "regulatory_sensitivity": regulatory_sensitivity,
-                    "implementation_assumptions": implementation_assumptions,
-                    "priority_score": calculated_priority,
-                    "classification": classification,
-                    "explanation": explanation,
-                    "scores": {
-                        "business_impact": business_impact,
-                        "strategic_alignment": strategic_alignment,
-                        "technical_feasibility": technical_feasibility,
+            if not uc_name.strip():
+                st.error("Please provide a Use-case name.")
+            else:
+                # Step 33: Prevent Duplicate Names
+                existing_names = [normalize_name(u["name"]) for u in st.session_state.use_cases]
+                if normalize_name(uc_name) in existing_names:
+                    st.error(f"A use case with the name '{uc_name}' already exists.")
+                else:
+                    scores_dict = {
+                        "impact": business_impact,
+                        "alignment": strategic_alignment,
+                        "feasibility": technical_feasibility,
                         "data_readiness": data_readiness_score,
                         "risk": risk_score
                     }
-                }
-                st.session_state.use_cases.append(new_use_case)
-                st.success(f"Use case '{uc_name}' added and classified as '{classification}'!")
-            else:
-                st.error("Please provide a Use-case name.")
 
+                    calculated_priority = calculate_priority_score(**scores_dict)
+                    classification = classify_use_case(**scores_dict)
+                    explanation = explain_recommendation(scores_dict)
+                    
+                    new_use_case = {
+                        "name": uc_name.strip(),
+                        "business_problem": business_problem,
+                        "business_owner": business_owner,
+                        "intended_users": intended_users,
+                        "business_benefit": business_benefit,
+                        "required_data": required_data,
+                        "solution_type": solution_type,
+                        "regulatory_sensitivity": regulatory_sensitivity,
+                        "implementation_assumptions": implementation_assumptions,
+                        "priority_score": calculated_priority,
+                        "classification": classification,
+                        "explanation": explanation,
+                        "scores": {
+                            "business_impact": business_impact,
+                            "strategic_alignment": strategic_alignment,
+                            "technical_feasibility": technical_feasibility,
+                            "data_readiness": data_readiness_score,
+                            "risk": risk_score
+                        }
+                    }
+                    st.session_state.use_cases.append(new_use_case)
+                    st.success(f"Use case '{uc_name}' added and classified as '{classification}'!")
+
+    # --- STEP 32: PORTFOLIO DISPLAY & MANAGEMENT ---
     if st.session_state.use_cases:
         st.write("---")
-        st.write("### Logged Use Cases")
+        st.write("## Use-Case Portfolio Overview")
+
+        # Sort use cases by priority score (descending)
+        sorted_cases = sorted(st.session_state.use_cases, key=lambda x: x["priority_score"], reverse=True)
+
+        # 1. Top Three Use Cases
+        st.write("### 🏆 Top Recommended Use Cases")
+        top_three = sorted_cases[:3]
+        col_a, col_b, col_c = st.columns(3)
+        cols = [col_a, col_b, col_c]
+        for idx, uc in enumerate(top_three):
+            with cols[idx]:
+                st.metric(
+                    label=f"#{idx+1} {uc['name']}",
+                    value=f"Score: {uc['priority_score']}",
+                    delta=uc['classification']
+                )
+                st.caption(f"**Owner:** {uc['business_owner'] or 'Unassigned'}")
+                st.caption(f"**Rationale:** {uc['explanation']}")
+
+        # 2. Ranked Table
+        st.write("### 📊 Ranked Portfolio Table")
+        table_data = []
+        for uc in sorted_cases:
+            table_data.append({
+                "Use Case": uc["name"],
+                "Priority Score": uc["priority_score"],
+                "Classification": uc["classification"],
+                "Business Owner": uc["business_owner"],
+                "Risk Score": uc["scores"]["risk"],
+                "Recommendation Explanation": uc["explanation"],
+            })
+        df_portfolio = pd.DataFrame(table_data)
+        st.dataframe(df_portfolio, use_container_width=True)
+
+        # 3. Impact vs. Feasibility Scatter Chart
+        st.write("### 🎯 Impact vs. Feasibility Matrix")
+        scatter_data = []
+        for uc in st.session_state.use_cases:
+            scatter_data.append({
+                "Use Case": uc["name"],
+                "Business Impact": uc["scores"]["business_impact"],
+                "Technical Feasibility": uc["scores"]["technical_feasibility"],
+                "Classification": uc["classification"]
+            })
+        df_scatter = pd.DataFrame(scatter_data)
+        st.scatter_chart(
+            df_scatter,
+            x="Technical Feasibility",
+            y="Business Impact",
+            color="Classification"
+        )
+
+        # 4. Manage & Delete Use Cases
+        st.write("### 🛠️ Manage Portfolio Entries")
         for idx, uc in enumerate(st.session_state.use_cases):
-            with st.expander(f"{idx + 1}. {uc['name']} — [{uc['classification']}] (Priority: {uc['priority_score']})"):
-                st.write(f"**AI Solution Type:** {uc['solution_type']}")
+            with st.expander(f"{uc['name']} — [{uc['classification']}] (Score: {uc['priority_score']})"):
                 st.write(f"**Business Owner/Function:** {uc['business_owner']}")
                 st.write(f"**Business Problem:** {uc['business_problem']}")
-                st.write(f"**Recommendation Rationale:** {uc.get('explanation', 'N/A')}")
+                st.write(f"**Solution Type:** {uc['solution_type']}")
+                st.write(f"**Explanation:** {uc['explanation']}")
                 
-                st.write("**Prioritization Metrics Breakdown:**")
-                sc = uc["scores"]
-                st.text(f"  • Business Impact: {sc['business_impact']}/5 | Strategic Alignment: {sc['strategic_alignment']}/5")
-                st.text(f"  • Technical Feasibility: {sc['technical_feasibility']}/5 | Data Readiness: {sc['data_readiness']}/5")
-                st.text(f"  • Risk Profile: {sc['risk']}/5")
-
+                if st.button(f"Delete '{uc['name']}'", key=f"del_{idx}"):
+                    st.session_state.use_cases.pop(idx)
+                    st.rerun()
 elif section == "4. Risk Register":
     st.title("Risk Register")
     st.write("Identify and analyze material AI risks.")

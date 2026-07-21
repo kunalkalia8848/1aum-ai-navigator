@@ -85,3 +85,5 @@ def explain_recommendation(use_case: dict) -> str:
         return "Standard evaluation profile with balanced attributes."
 
     return "; ".join(reasons).capitalize() + "."
+def normalize_name(name: str) -> str:
+    return " ".join(name.lower().strip().split())
