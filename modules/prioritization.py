@@ -62,3 +62,26 @@ def classify_use_case(
         return "Foundation Required"
 
     return "Defer"
+
+def explain_recommendation(use_case: dict) -> str:
+    reasons: list[str] = []
+
+    if use_case["impact"] >= 4:
+        reasons.append("high expected business impact")
+
+    if use_case["alignment"] >= 4:
+        reasons.append("strong alignment with organizational priorities")
+
+    if use_case["feasibility"] >= 4:
+        reasons.append("favorable technical feasibility")
+
+    if use_case["data_readiness"] < 3:
+        reasons.append("data preparation is required before implementation")
+
+    if use_case["risk"] >= 4:
+        reasons.append("material risk requires additional controls")
+
+    if not reasons:
+        return "Standard evaluation profile with balanced attributes."
+
+    return "; ".join(reasons).capitalize() + "."

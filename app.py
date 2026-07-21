@@ -7,6 +7,7 @@ import pandas as pd
 from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps, GAP_RECOMMENDATIONS
 from modules.prioritization import calculate_priority_score
 from modules.prioritization import calculate_priority_score, classify_use_case
+from modules.prioritization import calculate_priority_score, classify_use_case, explain_recommendation
 
 # 1. Page Configuration
 st.set_page_config(
@@ -201,7 +202,14 @@ elif section == "3. Use-Case Prioritization":
         
         if submit_uc:
             if uc_name:
-                # Step 29: Calculate the priority score dynamically on submission
+                scores_dict = {
+                    "impact": business_impact,
+                    "alignment": strategic_alignment,
+                    "feasibility": technical_feasibility,
+                    "data_readiness": data_readiness_score,
+                    "risk": risk_score
+                }
+
                 calculated_priority = calculate_priority_score(
                     impact=business_impact,
                     alignment=strategic_alignment,
@@ -209,6 +217,7 @@ elif section == "3. Use-Case Prioritization":
                     data_readiness=data_readiness_score,
                     risk=risk_score
                 )
+                
                 classification = classify_use_case(
                     impact=business_impact,
                     alignment=strategic_alignment,
@@ -217,6 +226,8 @@ elif section == "3. Use-Case Prioritization":
                     risk=risk_score
                 )
 
+                explanation = explain_recommendation(scores_dict)
+                
                 new_use_case = {
                     "name": uc_name,
                     "business_problem": business_problem,
@@ -228,6 +239,8 @@ elif section == "3. Use-Case Prioritization":
                     "regulatory_sensitivity": regulatory_sensitivity,
                     "implementation_assumptions": implementation_assumptions,
                     "priority_score": calculated_priority,
+                    "classification": classification,
+                    "explanation": explanation,
                     "scores": {
                         "business_impact": business_impact,
                         "strategic_alignment": strategic_alignment,
@@ -237,7 +250,7 @@ elif section == "3. Use-Case Prioritization":
                     }
                 }
                 st.session_state.use_cases.append(new_use_case)
-                st.success(f"Use case '{uc_name}' added and priority calculated successfully!")
+                st.success(f"Use case '{uc_name}' added and classified as '{classification}'!")
             else:
                 st.error("Please provide a Use-case name.")
 
@@ -249,6 +262,7 @@ elif section == "3. Use-Case Prioritization":
                 st.write(f"**AI Solution Type:** {uc['solution_type']}")
                 st.write(f"**Business Owner/Function:** {uc['business_owner']}")
                 st.write(f"**Business Problem:** {uc['business_problem']}")
+                st.write(f"**Recommendation Rationale:** {uc.get('explanation', 'N/A')}")
                 
                 st.write("**Prioritization Metrics Breakdown:**")
                 sc = uc["scores"]
