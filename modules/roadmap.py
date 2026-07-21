@@ -56,3 +56,103 @@ def generate_roadmap(use_case_name: str, start_date: str = None) -> dict:
             },
         ],
     }
+
+
+def generate_conditional_actions(
+    readiness_scores: dict[str, float],
+    highest_risk_severity: str,
+    selected_use_case: dict,
+) -> list[dict[str, str]]:
+    actions: list[dict[str, str]] = []
+
+    data_score = readiness_scores.get("Data Readiness", 0)
+    governance_score = readiness_scores.get(
+        "Governance, Risk, and Security",
+        0,
+    )
+    talent_score = readiness_scores.get(
+        "Talent and Operating Model",
+        0,
+    )
+    adoption_score = readiness_scores.get(
+        "Adoption and Change Management",
+        0,
+    )
+
+    if data_score < 3:
+        actions.append(
+            {
+                "phase": "Days 1–15",
+                "action": (
+                    "Complete data profiling, ownership confirmation, "
+                    "quality assessment, and access approval before "
+                    "model development."
+                ),
+                "reason": "Data readiness scored below 3.0.",
+            }
+        )
+
+    if governance_score < 3:
+        actions.append(
+            {
+                "phase": "Days 1–15",
+                "action": (
+                    "Establish AI use case approval, risk review, "
+                    "documentation, and escalation processes."
+                ),
+                "reason": "Governance maturity scored below 3.0.",
+            }
+        )
+
+    if talent_score < 3:
+        actions.append(
+            {
+                "phase": "Days 1–15",
+                "action": (
+                    "Confirm required business, data, engineering, security, "
+                    "and risk capabilities and address material skill gaps."
+                ),
+                "reason": "Talent and operating model maturity is limited.",
+            }
+        )
+
+    if adoption_score < 3:
+        actions.append(
+            {
+                "phase": "Days 16–35",
+                "action": (
+                    "Conduct user interviews and create a formal change, "
+                    "training, and adoption plan."
+                ),
+                "reason": "Adoption maturity scored below 3.0.",
+            }
+        )
+
+    if highest_risk_severity in ["Critical", "High"]:
+        actions.append(
+            {
+                "phase": "Days 1–15",
+                "action": (
+                    "Assign owners and approve mitigations for all critical "
+                    "and high risks before pilot authorization."
+                ),
+                "reason": (
+                    f"The assessment contains {highest_risk_severity.lower()} "
+                    "risks."
+                ),
+            }
+        )
+
+    if selected_use_case.get("risk", 1) >= 4:
+        actions.append(
+            {
+                "phase": "Days 16–35",
+                "action": (
+                    "Perform enhanced failure mode testing and define "
+                    "mandatory human review checkpoints."
+                ),
+                "reason": "The selected use case has elevated inherent risk.",
+            }
+        )
+
+    return actions
