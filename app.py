@@ -5,6 +5,7 @@ import pandas as pd
 import datetime
 
 # Import backend modules
+from modules.roadmap import generate_roadmap, generate_conditional_actions
 from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps, GAP_RECOMMENDATIONS
 from modules.prioritization import (
     calculate_priority_score, 
@@ -486,3 +487,78 @@ elif section == "4. Risk Register":
                 if st.button(f"🗑️ Delete {risk['risk_id']}", key=f"del_risk_{risk['risk_id']}"):
                     st.session_state.risk_register.pop(idx)
                     st.rerun()
+elif section == "5. 90-Day Roadmap":
+    st.title("90-Day Implementation Roadmap")
+    st.write("Tailored operational execution path based on organizational readiness and risk posture.")
+
+    if not st.session_state.use_cases:
+        st.warning("No use cases available. Please log at least one use case in '3. Use-Case Prioritization' first.")
+    else:
+        use_case_names = [uc["name"] for uc in st.session_state.use_cases]
+        selected_uc_name = st.selectbox("Select Use Case for Roadmap Generation", options=use_case_names)
+        
+        selected_uc = next((u for u in st.session_state.use_cases if u["name"] == selected_uc_name), None)
+
+        if selected_uc:
+            # 1. Base Roadmap
+            base_roadmap = generate_roadmap(selected_uc_name)
+
+            # 2. Extract readiness scores if available
+            readiness_scores = {}
+            if st.session_state.readiness_results:
+                readiness_scores = st.session_state.readiness_results.get("category_scores", {})
+
+            # 3. Determine highest risk severity for this use case
+            uc_risks = [r for r in st.session_state.risk_register if r["use_case"] == selected_uc_name]
+            severities = [r["severity"] for r in uc_risks]
+            
+            if "Critical" in severities:
+                highest_severity = "Critical"
+            elif "High" in severities:
+                highest_severity = "High"
+            elif "Medium" in severities:
+                highest_severity = "Medium"
+            elif "Low" in severities:
+                highest_severity = "Low"
+            else:
+                highest_severity = "None"
+
+            # 4. Generate conditional customized actions
+            custom_actions = generate_conditional_actions(
+                readiness_scores=readiness_scores,
+                highest_risk_severity=highest_severity,
+                selected_use_case=selected_uc
+            )
+
+            st.write("---")
+            st.write(f"## 🗓️ 90-Day Action Plan: **{selected_uc_name}**")
+            st.caption(f"**AI Solution Type:** {selected_uc['solution_type']} | **Owner:** {selected_uc['business_owner'] or 'Unassigned'}")
+
+            # Display Conditional Adjustments first if triggered
+            if custom_actions:
+                st.write("### 🚨 Tailored Gap-Closure Actions")
+                st.info("The following conditional actions were dynamically inserted into your roadmap based on identified readiness gaps and risk flags.")
+                
+                for idx, act in enumerate(custom_actions):
+                    with st.expander(f"⚡ [{act['phase']}] {act['action']}"):
+                        st.write(f"**Trigger:** `{act['trigger']}`")
+                        st.write(f"**Rationale:** {act['rationale']}")
+                        st.write(f"**Suggested Owner:** `{act['suggested_owner']}`")
+
+            # Display 4-Phase Standard Roadmap
+            st.write("---")
+            st.write("### 🧭 Core 90-Day Milestones")
+            
+            for phase in base_roadmap["phases"]:
+                st.write(f"#### {phase['phase_name']}")
+                
+                # Check for matching custom actions for this phase
+                phase_actions = [a for a in custom_actions if a["phase"] in phase["phase_name"]]
+                
+                for m in phase["milestones"]:
+                    st.write(f"  • {m}")
+                    
+                if phase_actions:
+                    for pa in phase_actions:
+                        st.warning(f"  👉 **REQUIRED ADJUSTMENT:** {pa['action']} *(Owner: {pa['suggested_owner']})*")
+                st.write("")
