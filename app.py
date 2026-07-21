@@ -5,20 +5,12 @@ import pandas as pd
 import datetime
 
 # Import backend modules
-from modules.report_generator import generate_deterministic_summary
-from modules.roadmap import generate_roadmap, generate_conditional_actions
-from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps, GAP_RECOMMENDATIONS
 from modules.demo_data import DEMO_COMPANIES
-from modules.report_generator import (
-    generate_deterministic_summary,
-    prepare_llm_payload,
-    generate_ai_summary,
-    create_executive_report
-)
-from modules.report_generator import (
-    generate_deterministic_summary,
-    prepare_llm_payload,
-    generate_ai_summary
+from modules.readiness import (
+    calculate_readiness_scores, 
+    maturity_level, 
+    identify_top_gaps, 
+    GAP_RECOMMENDATIONS
 )
 from modules.prioritization import (
     calculate_priority_score, 
@@ -27,7 +19,13 @@ from modules.prioritization import (
     normalize_name
 )
 from modules.risk_register import calculate_risk_score, classify_risk
-
+from modules.roadmap import generate_roadmap, generate_conditional_actions
+from modules.report_generator import (
+    generate_deterministic_summary,
+    prepare_llm_payload,
+    generate_ai_summary,
+    create_executive_report
+)
 # 1. Page Configuration
 st.set_page_config(
     page_title="1AUM Navigator",
