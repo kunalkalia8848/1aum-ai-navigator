@@ -1,0 +1,96 @@
+{
+  "Generative AI": [
+    {
+      "template_id": "GEN-ACC-01",
+      "category": "Accuracy and hallucination",
+      "description": "The system may produce unsupported, incomplete, or incorrect information.",
+      "default_likelihood": 4,
+      "default_impact": 4,
+      "mitigation": "Use grounded sources, citations, evaluation thresholds, user warnings, and human review."
+    },
+    {
+      "template_id": "GEN-PRIV-01",
+      "category": "Data privacy",
+      "description": "Sensitive information may be disclosed through prompts, retrieved context, logs, or generated text.",
+      "default_likelihood": 3,
+      "default_impact": 5,
+      "mitigation": "Apply data classification, access control, redaction, retention limits, and approved-data controls."
+    }
+  ],
+  "Computer vision": [
+    {
+      "template_id": "CV-ACC-01",
+      "category": "Accuracy and hallucination",
+      "description": "The system may fail to identify defects or may incorrectly classify acceptable items.",
+      "default_likelihood": 3,
+      "default_impact": 5,
+      "mitigation": "Use representative evaluation data, failure-mode testing, confidence thresholds, and human-in-the-loop review."
+    }
+  ],
+  "Predictive analytics": [
+    {
+      "template_id": "PA-BIAS-01",
+      "category": "Bias and fairness",
+      "description": "Historical training data may perpetuate systematic bias or unequal outcomes across groups.",
+      "default_likelihood": 3,
+      "default_impact": 4,
+      "mitigation": "Perform demographic parity checks, feature attribution audits, and routine bias mitigation tests."
+    },
+    {
+      "template_id": "PA-DRIFT-01",
+      "category": "Model drift",
+      "description": "Model accuracy degrades over time due to shifting underlying data patterns.",
+      "default_likelihood": 4,
+      "default_impact": 3,
+      "mitigation": "Implement continuous data drift monitoring, automated retraining pipelines, and performance alerts."
+    }
+  ],
+  "Intelligent automation": [
+    {
+      "template_id": "IA-OPS-01",
+      "category": "Operational resilience",
+      "description": "Process failures or API downtime disrupt downstream automated workflows.",
+      "default_likelihood": 3,
+      "default_impact": 4,
+      "mitigation": "Build fallback procedures, queue monitoring, transaction retries, and alert thresholds."
+    },
+    {
+      "template_id": "IA-OVERSIGHT-01",
+      "category": "Human oversight",
+      "description": "Autonomous decisions execute without sufficient human validation for edge cases.",
+      "default_likelihood": 3,
+      "default_impact": 4,
+      "mitigation": "Set clear escalation boundaries, human-approval checkpoints, and operational override options."
+    }
+  ],
+  "Optimization": [
+    {
+      "template_id": "OPT-CYBER-01",
+      "category": "Cybersecurity",
+      "description": "Adversarial input manipulation leads to suboptimal or compromised decisions.",
+      "default_likelihood": 2,
+      "default_impact": 5,
+      "mitigation": "Enforce input sanitization, API authentication, threat modeling, and anomaly detection."
+    }
+  ],
+  "Natural-language processing": [
+    {
+      "template_id": "NLP-EXPLAIN-01",
+      "category": "Explainability",
+      "description": "Complex language embeddings obscure clear reasoning behind classification outputs.",
+      "default_likelihood": 3,
+      "default_impact": 3,
+      "mitigation": "Provide confidence scores, key-phrase highlights, and decision audit logs."
+    }
+  ],
+  "Other": [
+    {
+      "template_id": "GEN-REG-01",
+      "category": "Regulatory compliance",
+      "description": "Evolving legal standards or sector guidance create compliance gaps.",
+      "default_likelihood": 3,
+      "default_impact": 4,
+      "mitigation": "Perform legal alignment reviews, maintain risk documentation, and track regulatory updates."
+    }
+  ]
+}
