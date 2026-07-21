@@ -55,6 +55,7 @@ DEMO_COMPANIES = {
                 "severity": "Critical",
                 "risk_score": 8.5,
                 "mitigation": "Perform sensor telemetry data profiling and consolidate data pipelines."
+                "owner": "Data Lead"
             },
             {
                 "risk_id": "R02",
@@ -63,6 +64,7 @@ DEMO_COMPANIES = {
                 "severity": "Medium",
                 "risk_score": 5.0,
                 "mitigation": "Establish daily calibration checks and baseline retraining datasets."
+                "owner": "QA Lead"
             }
         ]
     },
@@ -122,6 +124,7 @@ DEMO_COMPANIES = {
                 "severity": "High",
                 "risk_score": 7.2,
                 "mitigation": "Implement PII redacting middleware prior to prompt assembly."
+                "owner": "Compliance Lead"
             },
             {
                 "risk_id": "R02",
@@ -130,6 +133,7 @@ DEMO_COMPANIES = {
                 "severity": "Critical",
                 "risk_score": 9.0,
                 "mitigation": "Conduct independent algorithmic bias audits and model transparency checks."
+                "owner": "Risk Officer"
             }
         ]
     },
@@ -189,6 +193,7 @@ DEMO_COMPANIES = {
                 "severity": "High",
                 "risk_score": 7.0,
                 "mitigation": "Conduct driver user-interviews and roll out phased training programs."
+                "owner": "Operations Lead"
             }
         ]
     }

@@ -429,7 +429,7 @@ elif section == "4. Risk Register":
         total_risks = len(st.session_state.risk_register)
         critical_risks = sum(1 for r in st.session_state.risk_register if r["severity"] == "Critical")
         high_risks = sum(1 for r in st.session_state.risk_register if r["severity"] == "High")
-        unowned_risks = sum(1 for r in st.session_state.risk_register if not r["owner"].strip())
+        unowned_risks = sum(1 for r in st.session_state.risk_register if not r.get("owner", "").strip())
         unmitigated_risks = sum(1 for r in st.session_state.risk_register if not r["mitigation"].strip())
 
         col1, col2, col3, col4, col5 = st.columns(5)
