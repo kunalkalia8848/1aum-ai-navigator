@@ -11,6 +11,12 @@ from modules.readiness import calculate_readiness_scores, maturity_level, identi
 from modules.report_generator import (
     generate_deterministic_summary,
     prepare_llm_payload,
+    generate_ai_summary,
+    create_executive_report
+)
+from modules.report_generator import (
+    generate_deterministic_summary,
+    prepare_llm_payload,
     generate_ai_summary
 )
 from modules.prioritization import (
@@ -748,3 +754,27 @@ elif section == "5. Roadmap and Report":
                 st.write("### 📌 Assessment Limitations")
                 for lim in summary_data["limitations"]:
                     st.write(f"ℹ️ {lim}")
+# --- STEP 52: IN-MEMORY DOCX DOWNLOAD BUTTON ---
+            st.write("---")
+            st.write("### 📥 Export Executive Report")
+
+            report_data_payload = {
+                "organization_name": org_name,
+                "date": str(datetime.date.today()),
+                "executive_summary": summary_data,
+                "org_profile": st.session_state.org_profile or {},
+                "readiness_results": st.session_state.readiness_results or {},
+                "top_use_cases": sorted_ucs,
+                "risk_register": st.session_state.risk_register,
+                "roadmap_actions": custom_actions
+            }
+
+            docx_buffer = create_executive_report(report_data_payload)
+
+            st.download_button(
+                label="📄 Download Executive Readiness Report (.docx)",
+                data=docx_buffer,
+                file_name=f"{org_name.replace(' ', '_')}_AI_Readiness_Report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                type="primary"
+            )

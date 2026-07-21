@@ -141,3 +141,102 @@ def generate_ai_summary(payload: dict) -> ExecutiveSummary:
     )
 
     return completion.choices[0].message.parsed
+from io import BytesIO
+from docx import Document
+
+
+def create_executive_report(report_data: dict) -> BytesIO:
+    document = Document()
+
+    # 1. Cover Page / Header
+    document.add_heading("1AUM AI Deployment Readiness Report", level=0)
+    document.add_paragraph(f"Organization: {report_data.get('organization_name', 'Organization')}")
+    document.add_paragraph(f"Generated Date: {report_data.get('date', 'N/A')}")
+    document.add_page_break()
+
+    # 2. Executive Summary
+    document.add_heading("Executive Summary", level=1)
+    exec_sum = report_data.get("executive_summary", {})
+    document.add_paragraph(exec_sum.get("current_state", ""))
+
+    document.add_heading("Key Readiness Gaps", level=2)
+    for gap in exec_sum.get("key_gaps", []):
+        document.add_paragraph(gap, style="List Bullet")
+
+    # 3. Organization Profile
+    document.add_heading("Organization Profile", level=1)
+    org_p = report_data.get("org_profile", {})
+    document.add_paragraph(f"Industry: {org_p.get('industry', 'N/A')}")
+    document.add_paragraph(f"Company Size: {org_p.get('company_size', 'N/A')}")
+    document.add_paragraph(f"Maturity Target: {org_p.get('ai_maturity_target', 'N/A')}")
+
+    # 4. AI Readiness Results
+    document.add_heading("AI Readiness Results", level=1)
+    readiness = report_data.get("readiness_results", {})
+    document.add_paragraph(f"Overall Score: {readiness.get('overall_score', 0.0):.2f} / 5.0")
+    document.add_paragraph(f"Maturity Level: {readiness.get('maturity_level', 'Unassessed')}")
+
+    # 5. Category Analysis
+    document.add_heading("Category Analysis", level=1)
+    cat_scores = readiness.get("category_scores", {})
+    for cat, score in cat_scores.items():
+        document.add_paragraph(f"{cat}: {score:.2f} / 5.0")
+
+    # 6. Priority Use Cases
+    document.add_heading("Priority Use Cases", level=1)
+    for use_case in report_data.get("top_use_cases", []):
+        document.add_heading(use_case.get("name", "Unnamed Use Case"), level=2)
+        document.add_paragraph(f"Priority Score: {use_case.get('priority_score', 'N/A')}")
+        document.add_paragraph(f"Classification: {use_case.get('classification', 'N/A')}")
+        document.add_paragraph(f"Solution Type: {use_case.get('solution_type', 'N/A')}")
+        document.add_paragraph(use_case.get("recommendation_reason", ""))
+
+    # 7. AI Risk Register
+    document.add_heading("AI Risk Register Summary", level=1)
+    risks = report_data.get("risk_register", [])
+    if risks:
+        for r in risks:
+            document.add_paragraph(
+                f"[{r.get('risk_id')}] {r.get('category')} - Severity: {r.get('severity')} (Score: {r.get('risk_score')})"
+            )
+            document.add_paragraph(f"Mitigation: {r.get('mitigation')}", style="List Bullet")
+    else:
+        document.add_paragraph("No active risks logged.")
+
+    # 8. 90-Day Roadmap
+    document.add_heading("90-Day Implementation Roadmap", level=1)
+    roadmap_actions = report_data.get("roadmap_actions", [])
+    if roadmap_actions:
+        for act in roadmap_actions:
+            document.add_paragraph(
+                f"[{act.get('phase')}] {act.get('action')} (Trigger: {act.get('trigger')})",
+                style="List Bullet"
+            )
+    else:
+        document.add_paragraph("Standard 90-day milestone track applies.")
+
+    # 9. Recommended Next Steps
+    document.add_heading("Recommended Next Steps", level=1)
+    for act in exec_sum.get("immediate_actions", []):
+        document.add_paragraph(act, style="List Bullet")
+
+    # 10. Methodology
+    document.add_heading("Methodology", level=1)
+    document.add_paragraph(
+        "Readiness, prioritization, maturity, and risk scores are calculated through "
+        "deterministic scoring rules based on user-provided organizational inputs."
+    )
+
+    # 11. Limitations and Disclaimer
+    document.add_heading("Limitations and Disclaimer", level=1)
+    document.add_paragraph(
+        "Results provided in this report are directional and generated for decision-support purposes. "
+        "All recommendations and risk controls require review and formal validation by accountable enterprise leads."
+    )
+
+    # Save strictly in memory buffer
+    file_buffer = BytesIO()
+    document.save(file_buffer)
+    file_buffer.seek(0)
+
+    return file_buffer
