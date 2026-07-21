@@ -47,6 +47,13 @@ def load_questions():
             return json.load(f)
     return []
 
+# Helper function to load JSON risk library
+def load_risk_library():
+    file_path = os.path.join("data", "risk_library.json")
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
+            return json.load(f)
+    return {}
 # Map descriptive labels to numeric scores
 SCORE_MAP = {
     "1 - Not established": 1,
