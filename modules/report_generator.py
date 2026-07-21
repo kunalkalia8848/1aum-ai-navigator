@@ -105,3 +105,39 @@ def prepare_llm_payload(
         "risk_summary": sanitized_risks,
         "key_roadmap_adjustments": sanitized_roadmap
     }
+import os
+from openai import OpenAI
+from modules.models import ExecutiveSummary
+
+
+def generate_ai_summary(payload: dict) -> ExecutiveSummary:
+    """
+    Calls OpenAI using structured outputs to generate an executive summary.
+    Requires OPENAI_API_KEY set in environment variables or Streamlit secrets.
+    """
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is not set.")
+
+    client = OpenAI(api_key=api_key)
+
+    prompt = f"""
+    You are an expert enterprise AI strategist. Analyze the following sanitized organizational assessment data 
+    and synthesize an executive-level summary narrative.
+
+    Sanitized Assessment Data:
+    {payload}
+
+    Be concise, practical, and objective.
+    """
+
+    completion = client.beta.chat.completions.parse(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "Synthesize enterprise AI assessment results into structured executive insights."},
+            {"role": "user", "content": prompt},
+        ],
+        response_format=ExecutiveSummary,
+    )
+
+    return completion.choices[0].message.parsed
