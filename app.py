@@ -5,6 +5,7 @@ import pandas as pd
 import datetime
 
 # Import backend modules
+from modules.report_generator import generate_deterministic_summary
 from modules.roadmap import generate_roadmap, generate_conditional_actions
 from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps, GAP_RECOMMENDATIONS
 from modules.prioritization import (
