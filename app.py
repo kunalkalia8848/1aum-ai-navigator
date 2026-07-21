@@ -12,7 +12,8 @@ from modules.report_generator import (
     generate_deterministic_summary,
     prepare_llm_payload,
     generate_ai_summary
-)from modules.prioritization import (
+)
+from modules.prioritization import (
     calculate_priority_score, 
     classify_use_case, 
     explain_recommendation,
