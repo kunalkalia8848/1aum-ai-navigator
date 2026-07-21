@@ -665,31 +665,35 @@ elif section == "5. Roadmap and Report":
                         st.warning(f"  👉 **REQUIRED ADJUSTMENT:** {pa['action']} *(Owner: {pa['suggested_owner']})*")
                 st.write("")
 
-            # --- EXECUTIVE SUMMARY REPORT ---
+           # --- EXECUTIVE SUMMARY REPORT ---
             st.write("---")
             st.write("## 📄 Executive Summary Report")
 
-            org_name = st.session_state.org_profile.get("company_name", "Organization") if st.session_state.org_profile else "Organization"
+            org_profile = st.session_state.get("org_profile", {})
+            org_name = org_profile.get("company_name", "Organization") if org_profile else "Organization"
             
-            # Extract scores & gaps
-            if st.session_state.readiness_results:
-                ov_score = st.session_state.readiness_results.get("overall_score", 0.0)
-                mat_level = st.session_state.readiness_results.get("maturity_level", "Unassessed")
-                top_gaps = st.session_state.readiness_results.get("top_gaps", [])
+            readiness_results = st.session_state.get("readiness_results", {})
+            if readiness_results:
+                ov_score = readiness_results.get("overall_score", 0.0)
+                mat_level = readiness_results.get("maturity_level", "Unassessed")
+                top_gaps = readiness_results.get("top_gaps", [])
             else:
                 ov_score = 0.0
                 mat_level = "Unassessed"
                 top_gaps = []
 
-            sorted_ucs = sorted(st.session_state.use_cases, key=lambda x: x["priority_score"], reverse=True)
-            crit_count = sum(1 for r in st.session_state.risk_register if r["severity"] == "Critical")
+            use_cases = st.session_state.get("use_cases", [])
+            risk_register = st.session_state.get("risk_register", [])
+
+            sorted_ucs = sorted(use_cases, key=lambda x: x.get("priority_score", 0), reverse=True)
+            crit_count = sum(1 for r in risk_register if r.get("severity") == "Critical")
 
             # Prepare sanitized payload for AI
             payload = prepare_llm_payload(
-                org_profile=st.session_state.org_profile or {},
-                readiness_results=st.session_state.readiness_results or {},
-                use_cases=st.session_state.use_cases,
-                risk_register=st.session_state.risk_register,
+                org_profile=org_profile,
+                readiness_results=readiness_results,
+                use_cases=use_cases,
+                risk_register=risk_register,
                 roadmap_actions=custom_actions
             )
 
@@ -754,7 +758,8 @@ elif section == "5. Roadmap and Report":
                 st.write("### 📌 Assessment Limitations")
                 for lim in summary_data["limitations"]:
                     st.write(f"ℹ️ {lim}")
-# --- STEP 52: IN-MEMORY DOCX DOWNLOAD BUTTON ---
+
+            # --- EXPORT DOCX REPORT ---
             st.write("---")
             st.write("### 📥 Export Executive Report")
 
@@ -762,10 +767,10 @@ elif section == "5. Roadmap and Report":
                 "organization_name": org_name,
                 "date": str(datetime.date.today()),
                 "executive_summary": summary_data,
-                "org_profile": st.session_state.org_profile or {},
-                "readiness_results": st.session_state.readiness_results or {},
+                "org_profile": org_profile,
+                "readiness_results": readiness_results,
                 "top_use_cases": sorted_ucs,
-                "risk_register": st.session_state.risk_register,
+                "risk_register": risk_register,
                 "roadmap_actions": custom_actions
             }
 
