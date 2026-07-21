@@ -17,8 +17,8 @@ DEMO_COMPANIES = {
                 "Talent & Deployment Capability": 2.5
             },
             "top_gaps": [
-                ("Governance & Risk Management", 1.5),
-                ("Data & Infrastructure", 1.8)
+                ["Governance & Risk Management", 1.5],
+                ["Data & Infrastructure", 1.8]
             ]
         },
         "use_cases": [
@@ -54,7 +54,7 @@ DEMO_COMPANIES = {
                 "category": "Data Quality & Accessibility",
                 "severity": "Critical",
                 "risk_score": 8.5,
-                "mitigation": "Perform sensor telemetry data profiling and consolidate data pipelines."
+                "mitigation": "Perform sensor telemetry data profiling and consolidate data pipelines.",
                 "owner": "Data Lead"
             },
             {
@@ -63,7 +63,7 @@ DEMO_COMPANIES = {
                 "category": "Model Accuracy & Drift",
                 "severity": "Medium",
                 "risk_score": 5.0,
-                "mitigation": "Establish daily calibration checks and baseline retraining datasets."
+                "mitigation": "Establish daily calibration checks and baseline retraining datasets.",
                 "owner": "QA Lead"
             }
         ]
@@ -86,8 +86,8 @@ DEMO_COMPANIES = {
                 "Talent & Deployment Capability": 2.9
             },
             "top_gaps": [
-                ("Talent & Deployment Capability", 2.9),
-                ("Data & Infrastructure", 3.5)
+                ["Talent & Deployment Capability", 2.9],
+                ["Data & Infrastructure", 3.5]
             ]
         },
         "use_cases": [
@@ -123,7 +123,7 @@ DEMO_COMPANIES = {
                 "category": "Regulatory & Privacy Leakage",
                 "severity": "High",
                 "risk_score": 7.2,
-                "mitigation": "Implement PII redacting middleware prior to prompt assembly."
+                "mitigation": "Implement PII redacting middleware prior to prompt assembly.",
                 "owner": "Compliance Lead"
             },
             {
@@ -132,7 +132,7 @@ DEMO_COMPANIES = {
                 "category": "Algorithmic Bias & Fair Lending",
                 "severity": "Critical",
                 "risk_score": 9.0,
-                "mitigation": "Conduct independent algorithmic bias audits and model transparency checks."
+                "mitigation": "Conduct independent algorithmic bias audits and model transparency checks.",
                 "owner": "Risk Officer"
             }
         ]
@@ -155,8 +155,8 @@ DEMO_COMPANIES = {
                 "Talent & Deployment Capability": 2.9
             },
             "top_gaps": [
-                ("Governance & Risk Management", 2.2),
-                ("Talent & Deployment Capability", 2.9)
+                ["Governance & Risk Management", 2.2],
+                ["Talent & Deployment Capability", 2.9]
             ]
         },
         "use_cases": [
@@ -192,7 +192,7 @@ DEMO_COMPANIES = {
                 "category": "User Adoption & Change Management",
                 "severity": "High",
                 "risk_score": 7.0,
-                "mitigation": "Conduct driver user-interviews and roll out phased training programs."
+                "mitigation": "Conduct driver user-interviews and roll out phased training programs.",
                 "owner": "Operations Lead"
             }
         ]
