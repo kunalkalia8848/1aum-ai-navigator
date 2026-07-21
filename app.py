@@ -6,6 +6,7 @@ import pandas as pd
 # Import backend modules
 from modules.readiness import calculate_readiness_scores, maturity_level, identify_top_gaps, GAP_RECOMMENDATIONS
 from modules.prioritization import calculate_priority_score
+from modules.prioritization import calculate_priority_score, classify_use_case
 
 # 1. Page Configuration
 st.set_page_config(
@@ -208,7 +209,14 @@ elif section == "3. Use-Case Prioritization":
                     data_readiness=data_readiness_score,
                     risk=risk_score
                 )
-                
+                classification = classify_use_case(
+                    impact=business_impact,
+                    alignment=strategic_alignment,
+                    feasibility=technical_feasibility,
+                    data_readiness=data_readiness_score,
+                    risk=risk_score
+                )
+
                 new_use_case = {
                     "name": uc_name,
                     "business_problem": business_problem,
@@ -237,6 +245,7 @@ elif section == "3. Use-Case Prioritization":
         st.write("---")
         st.write("### Logged Use Cases")
         for idx, uc in enumerate(st.session_state.use_cases):
+with st.expander(f"{idx + 1}. {uc['name']} — [{uc['classification']}] (Priority: {uc['priority_score']})"):
             with st.expander(f"{idx + 1}. {uc['name']} (Priority Score: {uc['priority_score']})"):
                 st.write(f"**AI Solution Type:** {uc['solution_type']}")
                 st.write(f"**Business Owner/Function:** {uc['business_owner']}")

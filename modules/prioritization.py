@@ -39,3 +39,26 @@ def calculate_priority_score(
     )
 
     return round(score, 2)
+
+def classify_use_case(
+    impact: int,
+    alignment: int,
+    feasibility: int,
+    data_readiness: int,
+    risk: int,
+) -> str:
+    value_score = (impact + alignment) / 2
+
+    if risk >= 5:
+        return "Defer"
+
+    if value_score >= 4 and feasibility >= 4 and data_readiness >= 3:
+        return "Quick Win"
+
+    if value_score >= 4 and feasibility < 4:
+        return "Strategic Bet"
+
+    if value_score >= 3 and data_readiness < 3:
+        return "Foundation Required"
+
+    return "Defer"
