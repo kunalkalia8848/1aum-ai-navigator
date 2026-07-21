@@ -246,7 +246,6 @@ elif section == "3. Use-Case Prioritization":
         st.write("### Logged Use Cases")
         for idx, uc in enumerate(st.session_state.use_cases):
             with st.expander(f"{idx + 1}. {uc['name']} — [{uc['classification']}] (Priority: {uc['priority_score']})"):
-            with st.expander(f"{idx + 1}. {uc['name']} (Priority Score: {uc['priority_score']})"):
                 st.write(f"**AI Solution Type:** {uc['solution_type']}")
                 st.write(f"**Business Owner/Function:** {uc['business_owner']}")
                 st.write(f"**Business Problem:** {uc['business_problem']}")
