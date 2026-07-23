@@ -86,20 +86,43 @@ section = st.sidebar.radio(
         "5. Roadmap and Report",
     ],
 )
-# --- STAGE 11: DEMO MODE CONTROLS ---
+# --- RESET ASSESSMENT FUNCTION ---
+def reset_assessment() -> None:
+    keys_to_clear = [
+        "org_profile",
+        "readiness_responses",
+        "readiness_results",
+        "use_cases",
+        "risk_register",
+        "roadmap",
+        "executive_summary",
+    ]
+    
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+            
+    st.rerun()
+
+# --- STAGE 11: DEMO MODE & RESET CONTROLS ---
 st.sidebar.write("---")
 st.sidebar.subheader("⚡ Demo Mode")
 selected_demo = st.sidebar.selectbox("Select Sample Profile", options=list(DEMO_COMPANIES.keys()))
 
-if st.sidebar.button("🚀 Load Demo Organization"):
-    demo = DEMO_COMPANIES[selected_demo]
-    st.session_state["org_profile"] = demo["org_profile"]
-    st.session_state["readiness_results"] = demo["readiness_scores"]
-    st.session_state["use_cases"] = demo["use_cases"]
-    st.session_state["risk_register"] = demo["risk_register"]
-    st.sidebar.success(f"Loaded {selected_demo.split(':')[0]} data!")
-    st.rerun()
-# 4. Main UI Layout Routing
+col_demo1, col_demo2 = st.sidebar.columns(2)
+with col_demo1:
+    if st.button("🚀 Load Demo", use_container_width=True):
+        demo = DEMO_COMPANIES[selected_demo]
+        st.session_state["org_profile"] = demo["org_profile"]
+        st.session_state["readiness_results"] = demo["readiness_scores"]
+        st.session_state["use_cases"] = demo["use_cases"]
+        st.session_state["risk_register"] = demo["risk_register"]
+        st.sidebar.success(f"Loaded {selected_demo.split(':')[0]}!")
+        st.rerun()
+
+with col_demo2:
+    if st.button("🔄 Reset App", use_container_width=True, type="secondary"):
+        reset_assessment()# 4. Main UI Layout Routing
 if section == "1. Organization Profile":
     st.title("1AUM Navigator")
     st.subheader("From AI opportunity to governed execution.")
