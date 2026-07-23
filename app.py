@@ -326,7 +326,7 @@ elif section == "3. Use-Case Prioritization":
                     delta=uc['classification']
                 )
                 st.caption(f"**Owner:** {uc['business_owner'] or 'Unassigned'}")
-                st.caption(f"**Rationale:** {uc['explanation']}")
+                st.caption(f"**Rationale:** {uc.get('explanation', uc.get('rationale', uc.get('description', 'N/A')))}")
 
         # 2. Ranked Table
         st.write("### 📊 Ranked Portfolio Table")
