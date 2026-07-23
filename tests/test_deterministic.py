@@ -100,3 +100,25 @@ def test_roadmap_conditional_gap_triggers():
     
     actions = generate_conditional_actions(readiness_results, risk_register, selected_use_case)
     assert isinstance(actions, list)
+# ==========================================
+# STEP 59: BOUNDARY VALUE TESTS
+# ==========================================
+def test_risk_classification_boundaries():
+    assert classify_risk(5) == "Low"
+    assert classify_risk(6) == "Medium"
+    assert classify_risk(11) == "Medium"
+    assert classify_risk(12) == "High"
+    assert classify_risk(19) == "High"
+    assert classify_risk(20) == "Critical"
+    assert classify_risk(25) == "Critical"
+
+
+def test_maturity_level_boundaries():
+    assert maturity_level(1.99) == "Ad Hoc"
+    assert maturity_level(2.00) == "Emerging"
+    assert maturity_level(2.99) == "Emerging"
+    assert maturity_level(3.00) == "Developing"
+    assert maturity_level(3.99) == "Developing"
+    assert maturity_level(4.00) == "Established"
+    assert maturity_level(4.49) == "Established"
+    assert maturity_level(4.50) == "Leading"
